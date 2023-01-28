@@ -1,13 +1,25 @@
-import { Controller, Get, Query, Post, Body, Put, Param, Delete, Res, HttpStatus, HttpException } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, Put, Param, Delete, Res, HttpStatus, HttpException, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { UpdateCatDto } from './dto/update-cat.dto';
 import { ListAllEntities } from './dto/list-all-entities-dto';
 import { Response } from 'express';
 import { CatsService } from './cats.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { FileService } from 'src/helpers/file.service';
 
 @Controller('cats')
 export class CatsController {
-  constructor(private catsService: CatsService) {}
+  constructor(private catsService: CatsService, private fileService: FileService) { }
+
+  @Post("upload")
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(@Res() res: Response, @UploadedFile() file: Express.Multer.File) {
+
+    const result = await this.fileService.upload(file)
+    
+    res.status(HttpStatus.CREATED).send(result.message);
+
+  }
 
   @Post()
   create(@Res() res: Response, @Body() createCatDto: CreateCatDto) {
@@ -19,17 +31,17 @@ export class CatsController {
   async findAll(@Res() res: Response, @Query() query: ListAllEntities) {
     const cats = this.catsService.findAll()
     try {
-        await this.catsService.findAll()
-      } catch (error) { 
-        throw new HttpException({
-          status: HttpStatus.FORBIDDEN,
-          error: 'This is a custom message',
-        }, 
+      await this.catsService.findAll()
+    } catch (error) {
+      throw new HttpException({
+        status: HttpStatus.FORBIDDEN,
+        error: 'This is a custom message',
+      },
         HttpStatus.FORBIDDEN,
         {
           cause: error
         });
-      }
+    }
     res.status(HttpStatus.OK).json([]);
   }
 
