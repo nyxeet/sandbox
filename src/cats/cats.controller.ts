@@ -6,6 +6,7 @@ import { Response } from 'express';
 import { CatsService } from './cats.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileService } from 'src/helpers/file.service';
+require('dotenv').config();
 
 @Controller('cats')
 export class CatsController {
@@ -42,7 +43,7 @@ export class CatsController {
           cause: error
         });
     }
-    res.status(HttpStatus.OK).json([]);
+    res.status(HttpStatus.OK).json({status: 200, data: [], envValues: process.env});
   }
 
   @Get(':id')
